@@ -55,12 +55,12 @@ export default function LoginPage() {
           disabled={loading}
           className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold text-sm hover:bg-blue-700 disabled:opacity-50"
         >
-          {loading ? 'Loading...' : isSignUp ? 'Create Account' : 'Sign In'}
+          {loading ? 'Loading...' : isSignUp ? 'Create Account' : 'Log In'}
         </button>
         <p className="text-center text-sm text-gray-500 mt-4">
           {isSignUp ? 'Already have an account? ' : 'No account? '}
           <button onClick={() => setIsSignUp(!isSignUp)} className="text-blue-600 font-medium">
-            {isSignUp ? 'Sign In' : 'Sign Up'}
+            {isSignUp ? 'Log In' : 'Sign Up'}
           </button>
         </p>
       </div>
