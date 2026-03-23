@@ -47,7 +47,7 @@ export default function NoteEditorPage() {
         .from('notes')
         .update({
           title: newTitle,
-          content: { text: newContent },   // stored as JSONB
+          content: { text: newContent },
           updated_at: new Date().toISOString()
         })
         .eq('id', noteId)
@@ -69,17 +69,16 @@ export default function NoteEditorPage() {
     save(title, e.target.value)
   }
 
-  // Soft delete: set deleted_at instead of removing the row
   const handleDelete = async () => {
-    setDeleting(true)
-    const { error } = await supabase
-      .from('notes')
-      .update({ deleted_at: new Date().toISOString() })
-      .eq('id', noteId)
-    if (error) { toast.error('Failed to delete note'); setDeleting(false); return }
-    toast.success('Note moved to trash')
-    router.push('/dashboard')
-  }
+  setDeleting(true)
+  const { error } = await supabase
+    .from('notes')
+    .delete()
+    .eq('id', noteId)
+  if (error) { toast.error('Failed to delete note'); setDeleting(false); return }
+  toast.success('Note deleted')
+  router.push('/dashboard')
+}
 
   const statusLabel = {
     idle: '',
