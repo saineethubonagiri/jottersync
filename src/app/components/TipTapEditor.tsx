@@ -76,7 +76,10 @@ const TipTapEditor = forwardRef<EditorHandle, Props>(
     useImperativeHandle(ref, () => ({
       updateContent: (json: TipTapJSON) => {
         if (editor && json) {
-          editor.commands.setContent(json, false as unknown as boolean)
+          //editor.commands.setContent(json, false as unknown as boolean)
+          editor.commands.setContent(json, {
+            emitUpdate: false,
+          })
         }
       }
     }), [editor])
