@@ -7,21 +7,15 @@ import Placeholder from '@tiptap/extension-placeholder'
 import Typography from '@tiptap/extension-typography'
 import type { TipTapJSON } from '@/types/database'
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 type Props = {
   initialContent: TipTapJSON | null
   onUpdate: (json: TipTapJSON) => void
   editable?: boolean
 }
 
-// EditorHandle is what the parent (notes/[id]/page.tsx) can call on this component
-// via a ref. Right now it only exposes one method: updateContent.
 type EditorHandle = {
   updateContent: (json: TipTapJSON) => void
 }
-
-// ─── Toolbar Button ───────────────────────────────────────────────────────────
 
 type ToolbarButtonProps = {
   onClick: () => void
@@ -51,10 +45,6 @@ function ToolbarButton({ onClick, active, title, children }: ToolbarButtonProps)
   )
 }
 
-// ─── Main Editor ──────────────────────────────────────────────────────────────
-// Wrapped in forwardRef so the parent can pass a ref and call updateContent
-// on the editor instance directly — needed for realtime sync.
-
 const TipTapEditor = forwardRef<EditorHandle, Props>(
   ({ initialContent, onUpdate, editable = true }, ref) => {
 
@@ -83,26 +73,19 @@ const TipTapEditor = forwardRef<EditorHandle, Props>(
       immediatelyRender: false,
     })
 
-    // ── Expose updateContent to parent via ref ────────────────────────────────
-    // When a realtime update arrives in notes/[id]/page.tsx, it calls
-    // editorRef.current.updateContent(json) which runs this function.
-    // editor.commands.setContent(json, false):
-    //   - json → the new TipTap JSON from Supabase
-    //   - false → don't fire onUpdate callback (prevents infinite save loop)
     useImperativeHandle(ref, () => ({
       updateContent: (json: TipTapJSON) => {
         if (editor && json) {
-          editor.commands.setContent(json, false)
+          editor.commands.setContent(json, false as unknown as boolean)
         }
       }
-    }))
+    }), [editor])
 
     if (!editor) return null
 
     return (
       <div className="tiptap-wrapper">
 
-        {/* ── Fixed Toolbar ── */}
         <div className="flex flex-wrap items-center gap-1 px-2 py-2 border-b border-gray-100 sticky top-[57px] bg-white z-10">
 
           <ToolbarButton
@@ -216,13 +199,11 @@ const TipTapEditor = forwardRef<EditorHandle, Props>(
           </ToolbarButton>
         </div>
 
-        {/* ── Editor Content ── */}
         <EditorContent
           editor={editor}
           className="px-6 py-6 min-h-[60vh] prose prose-gray max-w-none focus:outline-none"
         />
 
-        {/* ── TipTap Styles ── */}
         <style jsx global>{`
           .tiptap-wrapper .ProseMirror {
             outline: none;
@@ -249,7 +230,6 @@ const TipTapEditor = forwardRef<EditorHandle, Props>(
   }
 )
 
-// Required when using forwardRef — helps React DevTools show the component name
 TipTapEditor.displayName = 'TipTapEditor'
 
 export default TipTapEditor
