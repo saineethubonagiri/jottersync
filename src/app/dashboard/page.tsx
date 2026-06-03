@@ -38,6 +38,66 @@ export default function DashboardPage() {
     init()
   }, [router])
 
+  // ── Global keyboard shortcut: Ctrl/Cmd+N → create new note ──────────────────
+  // useEffect runs once on mount and registers a keydown listener on the window.
+  // The cleanup function removes it when the user navigates away from dashboard,
+  // preventing the listener from stacking up on every return visit.
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // metaKey = Cmd on Mac, ctrlKey = Ctrl on Windows/Linux
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault() // stops browser's default "new window" behavior
+        createNote()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Realtime subscription for dashboard ─────────────────────────────────────
+// Listens for any INSERT or DELETE on the notes table.
+// When a new note is created or deleted in another tab,
+// the dashboard updates instantly without needing a reload.
+useEffect(() => {
+  const channel = supabase
+    .channel('dashboard:notes')
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'notes'
+      },
+      (payload) => {
+        if (payload.eventType === 'INSERT') {
+          // Add the new note to the top of the list
+          const newNote = payload.new as Note
+          setNotes(prev => [newNote, ...prev])
+          setFiltered(prev => [newNote, ...prev])
+        }
+
+        if (payload.eventType === 'DELETE') {
+          // Remove the deleted note from the list
+          const deletedId = payload.old.id
+          setNotes(prev => prev.filter(n => n.id !== deletedId))
+          setFiltered(prev => prev.filter(n => n.id !== deletedId))
+        }
+
+        if (payload.eventType === 'UPDATE') {
+          // Update the note title and timestamp in the list
+          const updatedNote = payload.new as Note
+          setNotes(prev => prev.map(n => n.id === updatedNote.id ? updatedNote : n))
+          setFiltered(prev => prev.map(n => n.id === updatedNote.id ? updatedNote : n))
+        }
+      }
+    )
+    .subscribe()
+
+  return () => {
+    supabase.removeChannel(channel)
+  }
+}, [])
+
   // Debounced search — waits 300ms after user stops typing
   const debouncedSearch = useCallback(
     debounce((query: string, allNotes: Note[]) => {
@@ -54,8 +114,9 @@ export default function DashboardPage() {
     debouncedSearch(e.target.value, notes)
   }
 
-  // Create a new blank note then navigate to editor
-  const createNote = async () => {
+  // ── Create note — wrapped in useCallback so the keyboard shortcut
+  // useEffect above always has a stable reference to this function ──────────────
+  const createNote = useCallback(async () => {
     setCreating(true)
     const { data: { user } } = await supabase.auth.getUser()
     const { data, error } = await supabase
@@ -65,7 +126,7 @@ export default function DashboardPage() {
       .single()
     if (error) { toast.error('Failed to create note'); setCreating(false); return }
     router.push(`/notes/${data.id}`)
-  }
+  }, [router])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -96,7 +157,7 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Navbar */}
       <nav className="bg-white border-b px-6 py-4 flex justify-between items-center sticky top-0 z-10">
-        <h1 className="font-bold text-xl text-gray-900">📝 Live Notes</h1>
+        <h1 className="font-bold text-xl text-gray-900">📝 Jotter Sync</h1>
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-400 hidden sm:block">{userEmail}</span>
           <button onClick={handleLogout} className="text-sm text-red-500 hover:text-red-700 font-medium">

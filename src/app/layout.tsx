@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Live Notes",
+  title: "Jotter Sync",
   description: "Real-time collaborative notes",
 };
 

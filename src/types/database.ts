@@ -1,11 +1,30 @@
 // FILE: src/types/database.ts
-// These mirror the Supabase table columns exactly
+
+// TipTap saves content as a JSON document tree.
+// This is the shape of every note's `content` column in Supabase.
+export type TipTapJSON = {
+  type: 'doc'
+  content: TipTapNode[]
+}
+
+export type TipTapNode = {
+  type: string
+  attrs?: Record<string, unknown>
+  content?: TipTapNode[]
+  marks?: TipTapMark[]
+  text?: string
+}
+
+export type TipTapMark = {
+  type: string
+  attrs?: Record<string, unknown>
+}
 
 export type Note = {
   id: string
   user_id: string
   title: string
-  content: Record<string, unknown> | null  // JSONB — will be TipTap JSON later
+  content: TipTapJSON | null   // was Record<string, unknown> | null
   created_at: string
   updated_at: string
   deleted_at: string | null
