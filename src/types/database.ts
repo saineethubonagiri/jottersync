@@ -1,7 +1,5 @@
 // FILE: src/types/database.ts
 
-// TipTap saves content as a JSON document tree.
-// This is the shape of every note's `content` column in Supabase.
 export type TipTapJSON = {
   type: 'doc'
   content: TipTapNode[]
@@ -24,10 +22,11 @@ export type Note = {
   id: string
   user_id: string
   title: string
-  content: TipTapJSON | null   // was Record<string, unknown> | null
+  content: TipTapJSON | null
   created_at: string
   updated_at: string
   deleted_at: string | null
+  share_token: string | null  // ← NEW: unique token for public share links
 }
 
 export type Profile = {
@@ -45,4 +44,14 @@ export type NoteShare = {
   shared_with_user_id: string
   permission_level: 'read' | 'edit'
   created_at: string
+}
+
+// Used in the "Shared with me" dashboard section —
+// a note_shares row with the full note data joined in
+export type NoteShareWithNote = {
+  id: string
+  note_id: string
+  permission_level: 'read' | 'edit'
+  created_at: string
+  notes: Note
 }

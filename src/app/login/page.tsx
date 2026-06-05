@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
@@ -13,7 +13,14 @@ export default function LoginPage() {
   const [isSignUp, setIsSignUp] = useState(false)
   const [loading, setLoading] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
+  //const router = useRouter()
   const router = useRouter()
+
+useEffect(() => {
+  supabase.auth.getSession().then(({ data }) => {
+    console.log("SESSION:", data.session)
+  })
+}, [])
 
   const handleAuth = async () => {
     if (!email || !password) { toast.error('Please fill in all fields'); return }
